@@ -65,7 +65,7 @@
 \begin{frame}[fragile]{Facile example}
 \begin{minted}{java}
 import static org.junit.Assert.assertTrue;
-assertTrue(list.isEmpty());
+assertTrue(a.equalsIgnoreCase(b));
 \end{minted}
 \vfill
 \begin{verbatim}
@@ -125,7 +125,7 @@ public static void assertEquals(Object expected, Object actual)
 
 \section{What does a good assert look like?}
 
-\begin{frame}[fragile]{JUnit vs AssertJ}
+\begin{frame}[fragile]{AssertJ > JUnit}
 JUnit:
 \begin{minted}{java}
 assertEquals(expected, actual);
@@ -135,13 +135,16 @@ AssertJ:
 \begin{minted}{java}
 assertThat(actual).isEqualTo(expected);
 \end{minted}
+\vfill
+(okay, the order still doesn't seem super obvious, but will be as soon as we start using other assertions)
 \end{frame}
 
-\begin{frame}{JUnit vs AssertJ}
+\begin{frame}{AssertJ > JUnit}
 \begin{itemize}
 \item obvious argument order
 \item strongly typed; can't accidentally compare incompatible types
-\item AssertJ matchers are very powerful, and you can write your own
+\item AssertJ assertions are chainable, very powerful, and extremely informative
+\item you can write your own assertion helpers
 \item better NPE information!
 \item AssertJ seems more to type, but we'll get to that...
 \end{itemize}
@@ -221,6 +224,7 @@ assertThatExceptionOfType(ArithmeticException.class)
 \item what about \texttt{org.skyscreamer.jsonassert.JSONAssert}?
 \item can be good, can print absolutely useless errors in rare cases
 \item hand-rolled JSON strings in Java \textit{suck} because of escaping; brittle
+\item old version were worse printing no useful error
 \end{itemize}
 \pause
 \vfill
@@ -246,7 +250,7 @@ Expected: a JSON object
 \item better NPE handling
 \item easier to write complex asserts, more specific tests, less brittle
 \item richer assertion messages means less time debugging, grok the problem quicker
-\item prefer AssertJ over Hamcrest, because auto-complete makes discovering matchers easy, less nesting due to fluent style
+\item prefer AssertJ over Hamcrest, because auto-complete makes discovering assertions easy, less nesting due to fluent style
 \end{itemize}
 \end{frame}
 
