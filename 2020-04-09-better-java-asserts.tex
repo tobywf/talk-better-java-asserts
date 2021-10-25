@@ -1,0 +1,261 @@
+%!TEX TS-program = XeLaTeX
+\documentclass[xetex,12pt,aspectratio=169]{beamer}
+
+\usepackage[english]{babel}
+\usepackage{fontspec}
+\setmainfont[Mapping=tex-text]{Source Serif Pro}
+\setsansfont[Mapping=tex-text]{Source Sans Pro}
+\setmonofont[Mapping=,Scale=0.85]{Source Code Pro}
+
+\beamertemplatenavigationsymbolsempty
+
+\definecolor{offwhite}{HTML}{fcfcfc}
+\definecolor{lightgrey}{HTML}{848484}
+\definecolor{mediumgrey}{HTML}{444453}
+\definecolor{midgrey}{HTML}{222226}
+\definecolor{darkgrey}{HTML}{18191c}
+
+\definecolor{pink}{HTML}{F92672}
+
+\setbeamercolor*{palette primary}{fg=midgrey,bg=offwhite}
+\setbeamercolor*{normal text}{use=palette primary,fg=palette primary.fg,bg=palette primary.bg}
+\setbeamercolor*{structure}{use=palette primary,fg=palette primary.fg,bg=palette primary.bg}
+
+\usepackage{minted}
+
+\usepackage{tikz}
+\usetikzlibrary{calc}
+
+\newcommand{\sectionframe}[1]{\begin{frame}[plain]\usebeamercolor{palette primary}
+\begin{tikzpicture}[remember picture,overlay]
+\fill [fg]  (current page.north east) rectangle (current page.south west);
+\path (current page.north east) -- +(-1,-1) coordinate (northwest);
+\path (current page.south west) -- +(+1,+1) coordinate (southwest);
+\draw[bg] (northwest) rectangle (southwest) node [midway,align=center] {\usebeamerfont{title}#1};
+\end{tikzpicture}
+\end{frame}}
+
+\AtBeginSection[]{\sectionframe{\insertsectionhead}}
+
+\defbeamertemplate*{title page}{customized}[1][]
+{\usebeamercolor{palette primary}
+\begin{tikzpicture}[fg,remember picture,overlay]
+\path (current page.north) -- +(-1,0) coordinate (north);
+\path (current page.south) -- +(-1,0) coordinate (south);
+\path (current page.south) -- +(-4,0) coordinate (southskew);
+\fill (current page.north west) -- (north) -- (southskew) -- (current page.south west) -- cycle;
+\node () at ($(north)!0.4!(south)$) [right] {\usebeamerfont{title}\inserttitle};
+\node () at ($(north)!0.46!(south)$) [right] {\usebeamerfont{subtitle}\insertsubtitle};
+\node () at ($(north)!0.6!(south)$) [right] {\usebeamerfont{author}\insertauthor};
+\node () at ($(north)!0.7!(south)$) [right] {\usebeamerfont{date}\insertdate};
+\end{tikzpicture}}
+
+\title{Better Java Asserts}
+\subtitle{}
+\author{Toby Fleming}
+
+\usepackage{verbatim}
+
+\begin{document}
+
+\maketitle
+
+\section{What does a bad assert look like?}
+
+\begin{frame}[fragile]{Facile example}
+\begin{minted}{java}
+import static org.junit.Assert.assertTrue;
+assertTrue(a.equalsIgnoreCase(b));
+\end{minted}
+\vfill
+\begin{verbatim}
+java.lang.AssertionError
+    at org.junit.Assert.fail(Assert.java:86)
+    ...
+\end{verbatim}
+\vfill
+\begin{center}
+\includegraphics[height=48pt]{glyph-u1F62D.png}\includegraphics[height=48pt]{glyph-u1F62D.png}\includegraphics[height=48pt]{glyph-u1F62D.png}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile,t]{Different example}
+realistic example:
+\vfill
+\begin{minted}{java}
+final Result a = new API().getResult();
+final Result b = new Result.Builder().build();
+assertEquals(a, b);
+\end{minted}
+\vfill
+simplified example:
+\vfill
+\begin{minted}{java}
+assertEquals("foo", "bar");
+\end{minted}
+\end{frame}
+
+\section{Pop Quiz}
+
+\begin{frame}[fragile]{What's the assert message?}
+\begin{minted}{java}
+assertEquals("foo", "bar");
+\end{minted}
+\vfill
+\begin{itemize}[<+(1)->]
+\item[a)] \texttt{expected: <foo> but was: <bar>}
+\item[b)] \texttt{expected: <bar> but was: <foo>}
+\item[c)] all of the above?
+\item[d)] none of the above
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\vfill
+\begin{beamercolorbox}[sep=8pt,center,shadow=false,rounded=false]{title}
+\usebeamerfont{title}The fact you had to think about it means \texttt{assertEquals()} is bad API design\par%
+\end{beamercolorbox}
+\vfill
+\pause
+\begin{minted}{java}
+public static void assertEquals(Object expected, Object actual)
+\end{minted}
+({\footnotesize\url{https://junit.org/junit4/javadoc/4.12/org/junit/Assert.html}})
+\end{frame}
+
+\section{What does a good assert look like?}
+
+\begin{frame}[fragile]{AssertJ > JUnit}
+JUnit:
+\begin{minted}{java}
+assertEquals(expected, actual);
+\end{minted}
+\vfill
+AssertJ:
+\begin{minted}{java}
+assertThat(actual).isEqualTo(expected);
+\end{minted}
+\vfill
+(okay, the order still doesn't seem super obvious, but will be as soon as we start using other assertions)
+\end{frame}
+
+\begin{frame}{AssertJ > JUnit}
+\begin{itemize}
+\item obvious argument order
+\item strongly typed; can't accidentally compare incompatible types
+\item AssertJ assertions are chainable, very powerful, and extremely informative
+\item you can write your own assertion helpers
+\item better NPE information!
+\item AssertJ seems more to type, but we'll get to that...
+\end{itemize}
+\end{frame}
+
+\section{Still not convinced?}
+
+\begin{frame}[fragile]{isEqualToIgnoringCase}
+\begin{minted}{java}
+assertTrue("foo".equalsIgnoreCase("bar"));
+\end{minted}
+\begin{verbatim}
+...
+\end{verbatim}
+\vfill
+\begin{minted}{java}
+assertThat("foo").isEqualToIgnoringCase("bar");
+\end{minted}
+\begin{verbatim}
+Expecting:
+ <"foo">
+to be equal to:
+ <"bar">
+ignoring case considerations
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{hasSize}
+\begin{minted}{java}
+final List<String> list = ImmutableList.of("foo");
+assertThat(list).hasSize(2);
+\end{minted}
+\begin{verbatim}
+java.lang.AssertionError:
+Expected size:<2> but was:<1> in:
+<["foo"]>
+\end{verbatim}
+\vfill
+you can actually see what's in the list!
+\end{frame}
+
+\begin{frame}[fragile]{NullPointerException}
+\begin{minted}{java}
+final List<String> list = null;
+assertThat(list).hasSize(2);
+\end{minted}
+\begin{verbatim}
+java.lang.AssertionError:
+Expecting actual not to be null
+\end{verbatim}
+\vfill
+it's a small win this isn't an NPE; but this does make triage easier.
+\end{frame}
+
+\begin{frame}[fragile]{More complex asserts!}
+\begin{minted}{java}
+assertThat(string)
+    .startsWith("foo")
+    .endsWith("bar");
+
+assertThat(list)
+    .hasSize(7)
+    .contains(item);
+
+assertThatExceptionOfType(ArithmeticException.class)
+    .isThrownBy(() -> { ... })
+    .hasMessageContaining("foo")
+\end{minted}
+\end{frame}
+
+
+\section{Other learnings}
+
+
+\begin{frame}[fragile]{JSONAssert}
+\begin{itemize}
+\item what about \texttt{org.skyscreamer.jsonassert.JSONAssert}?
+\item can be good, can print absolutely useless errors in rare cases
+\item hand-rolled JSON strings in Java \textit{suck} because of escaping; brittle
+\item old version were worse printing no useful error
+\end{itemize}
+\pause
+\vfill
+\begin{minted}{java}
+JSONAssert.assertEquals("{\"EXPECTED\": 1}", "\"ACTUAL\"", true);
+\end{minted}
+\begin{verbatim}
+Expected: a JSON object
+     got: org.skyscreamer.jsonassert.JSONParser$1@5d16055
+\end{verbatim}
+(okay, contrived, but still interesting)
+\end{frame}
+
+
+\section{TL;DR}
+
+
+\begin{frame}[fragile]{TL;DR}
+\begin{itemize}
+\item AssertJ is really nice
+\item obvious argument order
+\item strongly typed
+\item better NPE handling
+\item easier to write complex asserts, more specific tests, less brittle
+\item richer assertion messages means less time debugging, grok the problem quicker
+\item prefer AssertJ over Hamcrest, because auto-complete makes discovering assertions easy, less nesting due to fluent style
+\end{itemize}
+\end{frame}
+
+
+\section{Fin}
+
+
+\end{document}
